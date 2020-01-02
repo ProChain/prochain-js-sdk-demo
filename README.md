@@ -12,7 +12,7 @@
 
 - Account: "5H6Lyq5TZKa8YzPwCgBgpYTNJVWKvWzMDVihTZMYk2mHiFi4"
 - Key file name `keys/5H6Lyq5TZKa8YzPwCgBgpYTNJVWKvWzMDVihTZMYk2mHiFi4.json`
-- Key file format: `{ "address" : "5H6Lyq5TZKa8YzPwCgBgpYTNJVWKvWzMDVihTZMYk2mHiFi4", "seed" : "" } `
+- Key file format: `{ "address" : "5H6Lyq5TZKa8YzPwCgBgpYTNJVWKvWzMDVihTZMYk2mHiFi4", "seed" : "menonic of test account" } `
 
 ### Testnet Blockchain Explorer
 
