@@ -126,6 +126,7 @@ const run = async () => {
     })
     console.log('api created -----')
 
+    //example1: listen_to_blocks
     //https://polkadot.js.org/api/examples/promise/02_listen_to_blocks/
     let count = 0;
 
@@ -139,7 +140,7 @@ const run = async () => {
     });
 
 
-    //https://polkadot.js.org/api/examples/promise/06_make_transfer/
+    //example2: create keypair
     var res = fs.readFileSync(`./keys/${AUTH_ADDRESS}.json`, 'utf8');
     const keyring = new Keyring({
         type: 'sr25519'
@@ -149,12 +150,38 @@ const run = async () => {
     } = JSON.parse(res.toString())
     const pair = keyring.addFromMnemonic(seed)
 
-    //const nonce = await api.query.system.accountNonce(pair.address);
 
-    //transfer to, with amount 0.1, persicion is 15
-    const transfer = api.tx.balances.transfer("5HB5qLTfah2Bp8XUTNLaME5f2D1WW3xTger5PvXiXrNLi2SM", 100000000000000);
+    //example3: transfer to did
+    let signer_did = await api.query.did.identity(AUTH_ADDRESS);
+    console.log("signer did, " + signer_did);
+
+    let receiver_did = await api.query.did.identity("5HB5qLTfah2Bp8XUTNLaME5f2D1WW3xTger5PvXiXrNLi2SM");
+    console.log("receiver did, " + receiver_did);
+
+    //with amount 0.1, persicion is 15
+    const transfer = api.tx.did.transfer(receiver_did, 100000000000000, "testing transfer to did");
     const hash = await transfer.signAndSend(pair);
-    console.log('Transfer sent with hash', hash.toHex());
+    console.log('Transfer to did sent with hash', hash.toHex());
+
+    //example4: transfer, with amount 0.1, persicion is 15
+    //https://polkadot.js.org/api/examples/promise/06_make_transfer/
+    const nonce = await api.query.system.accountNonce(pair.address);
+    api.tx.balances
+    .transfer("5HB5qLTfah2Bp8XUTNLaME5f2D1WW3xTger5PvXiXrNLi2SM", 100000000000000)
+    .signAndSend(pair, { nonce }, ({ events = [], status }) => {
+      console.log('Transaction status:', status.type);
+
+      if (status.isFinalized) {
+        console.log('Completed at block hash', status.asFinalized.toHex());
+        console.log('Events:');
+
+        events.forEach(({ phase, event: { data, method, section } }) => {
+          console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
+        });
+
+        process.exit(0);
+      }
+    });
 }
 
 
