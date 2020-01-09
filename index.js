@@ -160,12 +160,16 @@ const run = async () => {
     if (!signer_did.isEmpty) {
         const [, didHex] = signer_did.toJSON()
         console.log("signer did, " + hexToDid(didHex));
+    } else {
+        console.log("signer_did isEmpty");
     }
 
     let receiver_did = await api.query.did.identity("5HB5qLTfah2Bp8XUTNLaME5f2D1WW3xTger5PvXiXrNLi2SM");
     if (!receiver_did.isEmpty) {
         const [, didHex] = receiver_did.toJSON()
-        console.log("signer did, " + hexToDid(didHex));
+        console.log("receiver did, " + hexToDid(didHex));
+    } else {
+        console.log("receiver isEmpty");
     }
 
     //example4: transfer, with amount 0.1, persicion is 15
