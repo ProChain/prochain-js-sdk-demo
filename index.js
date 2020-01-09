@@ -8,6 +8,9 @@ const {
     stringToHex
 } = require('@polkadot/util');
 
+const bs58 = require('bs58');
+const { blake2AsHex } = require('@polkadot/util-crypto')
+
 //prochain testnet endpoint
 const WS_PROVIDER = 'wss://substrate.chain.pro/v2/ws';
 
@@ -42,6 +45,7 @@ const run = async () => {
     const api = await ApiPromise.create({
         provider,
         types: {
+            "Did": "Vec<u8>",
             "ExternalAddress": {
                 "btc": "Vec<u8>",
                 "eth": "Vec<u8>",
@@ -151,37 +155,45 @@ const run = async () => {
     const pair = keyring.addFromMnemonic(seed)
 
 
-    //example3: transfer to did
+    //example3: query did
     let signer_did = await api.query.did.identity(AUTH_ADDRESS);
-    console.log("signer did, " + signer_did);
+    if (!signer_did.isEmpty) {
+        const [, didHex] = signer_did.toJSON()
+        console.log("signer did, " + hexToDid(didHex));
+    }
 
     let receiver_did = await api.query.did.identity("5HB5qLTfah2Bp8XUTNLaME5f2D1WW3xTger5PvXiXrNLi2SM");
-    console.log("receiver did, " + receiver_did);
-
-    //with amount 0.1, persicion is 15
-    const transfer = api.tx.did.transfer(receiver_did, 100000000000000, "testing transfer to did");
-    const hash = await transfer.signAndSend(pair);
-    console.log('Transfer to did sent with hash', hash.toHex());
+    if (!receiver_did.isEmpty) {
+        const [, didHex] = receiver_did.toJSON()
+        console.log("signer did, " + hexToDid(didHex));
+    }
 
     //example4: transfer, with amount 0.1, persicion is 15
     //https://polkadot.js.org/api/examples/promise/06_make_transfer/
     const nonce = await api.query.system.accountNonce(pair.address);
     api.tx.balances
-    .transfer("5HB5qLTfah2Bp8XUTNLaME5f2D1WW3xTger5PvXiXrNLi2SM", 100000000000000)
-    .signAndSend(pair, { nonce }, ({ events = [], status }) => {
-      console.log('Transaction status:', status.type);
+        .transfer("5HB5qLTfah2Bp8XUTNLaME5f2D1WW3xTger5PvXiXrNLi2SM", 100000000000000)
+        .signAndSend(pair, { nonce }, ({ events = [], status }) => {
+            console.log('Transaction status:', status.type);
 
-      if (status.isFinalized) {
-        console.log('Completed at block hash', status.asFinalized.toHex());
-        console.log('Events:');
+            if (status.isFinalized) {
+                console.log('Completed at block hash', status.asFinalized.toHex());
+                console.log('Events:');
 
-        events.forEach(({ phase, event: { data, method, section } }) => {
-          console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
+                events.forEach(({ phase, event: { data, method, section } }) => {
+                    console.log('\t', phase.toString(), `: ${section}.${method}`, data.toString());
+                });
+
+                process.exit(0);
+            }
         });
 
-        process.exit(0);
-      }
-    });
+    const hexToDid = (hex) => {
+        const bytes = Buffer.from(hex.slice(2), 'hex')
+        const address = bs58.encode(bytes);
+        const did = `did:pra:${address}`
+        return did
+    }
 }
 
 
